@@ -9,7 +9,6 @@ const BillsList = () => {
   ]);
 
   const handleViewBill = (billId) => {
-    // Aquí puedes agregar lógica para visualizar los detalles de la factura
     alert(`Ver detalles de la factura con ID: ${billId}`);
   };
 
