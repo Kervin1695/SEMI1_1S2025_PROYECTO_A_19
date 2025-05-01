@@ -1,25 +1,201 @@
-from flask import Flask
-from app.routes.auth_routes import auth_bp
-from app.routes.budget_routes import budget_bp
-from app.routes.expenses_routes import expenses_bp
-from app.routes.bills_routes import bills_bp
-from app.routes.reports_routes import reports_bp
+from flask import Flask, request, jsonify
+import pymysql
 
-def create_app():
-    app = Flask(__name__)
-    
-    # Configuración de la aplicación
-    app.config.from_object('config.Config')
+# Configuración de la base de datos
+def get_connection():
+    return pymysql.connect(
+        host='localhost',
+        user='tu_usuario',  # Cambia esto por tu usuario de la base de datos
+        password='tu_contraseña',  # Cambia esto por tu contraseña
+        database='DB_Proyecto_1',
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
-    # Registro de Blueprints
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(budget_bp)
-    app.register_blueprint(expenses_bp)
-    app.register_blueprint(bills_bp)
-    app.register_blueprint(reports_bp)
+app = Flask(__name__)
 
-    return app
+# Endpoint: POST /register
+@app.route('/register', methods=['POST'])
+def register_user():
+    data = request.json
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            sql = """
+                INSERT INTO Usuarios (name, lastname, username, email, phone, password, photo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(sql, (
+                data['name'], data['lastname'], data['username'],
+                data['email'], data['phone'], data['password'], data['photo']
+            ))
+            connection.commit()
+        return jsonify({"message": "usuario registrado correctamente"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
+
+# Endpoint: POST /login
+@app.route('/login', methods=['POST'])
+def login_user():
+    data = request.json
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            sql = """
+                SELECT id FROM Usuarios WHERE username = %s AND password = %s
+            """
+            cursor.execute(sql, (data['username'], data['password']))
+            user = cursor.fetchone()
+            if user:
+                return jsonify({"message": "Login exitoso", "id_user": user['id']}), 200
+            else:
+                return jsonify({"error": "Credenciales incorrectas"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
+
+# Endpoint: GET /currentBudget/<user_id>
+@app.route('/currentBudget/<int:user_id>', methods=['GET'])
+def current_budget(user_id):
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            sql = """
+                SELECT type, date, description, amount
+                FROM Gastos
+                WHERE user_id = %s AND MONTH(date) = MONTH(CURRENT_DATE()) AND YEAR(date) = YEAR(CURRENT_DATE())
+            """
+            cursor.execute(sql, (user_id,))
+            expenses = cursor.fetchall()
+        return jsonify(expenses), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
+
+# Endpoint: GET /billsList/<user_id>
+@app.route('/billsList/<int:user_id>', methods=['GET'])
+def bills_list(user_id):
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            sql = """
+                SELECT type, date, description, amount, bill AS url
+                FROM Gastos
+                WHERE user_id = %s
+            """
+            cursor.execute(sql, (user_id,))
+            bills = cursor.fetchall()
+        return jsonify(bills), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
+
+# Endpoint: GET /pastExpenses/<user_id>
+@app.route('/pastExpenses/<int:user_id>', methods=['GET'])
+def past_expenses(user_id):
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            sql = """
+                SELECT type, date, description, amount
+                FROM Gastos
+                WHERE user_id = %s
+            """
+            cursor.execute(sql, (user_id,))
+            expenses = cursor.fetchall()
+        return jsonify(expenses), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
+
+# Endpoint: POST /addExpense/<user_id>
+@app.route('/addExpense/<int:user_id>', methods=['POST'])
+def add_expense(user_id):
+    data = request.json
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            sql = """
+                INSERT INTO Gastos (user_id, type, description, amount, date)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(sql, (
+                user_id, data['type'], data['description'],
+                data['amount'], data['date']
+            ))
+            connection.commit()
+        return jsonify({"message": "gasto agregado correctamente"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
+
+# Endpoint: POST /addBill/<user_id>
+@app.route('/addBill/<int:user_id>', methods=['POST'])
+def add_bill(user_id):
+    data = request.json
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            sql = """
+                INSERT INTO Gastos (user_id, type, description, amount, date, bill)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(sql, (
+                user_id, data['type'], data['description'],
+                data['amount'], data['date'], data['url']
+            ))
+            connection.commit()
+        return jsonify({"message": "gasto agregado correctamente"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
+
+# Endpoint: GET /reports/expenses/<user_id>
+@app.route('/reports/expenses/<int:user_id>', methods=['GET'])
+def expenses_report(user_id):
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            sql = """
+                SELECT DATE_FORMAT(date, '%m-%Y') AS month, SUM(amount) AS total
+                FROM Gastos
+                WHERE user_id = %s
+                GROUP BY month
+            """
+            cursor.execute(sql, (user_id,))
+            report = cursor.fetchall()
+        return jsonify({row['month']: row['total'] for row in report}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
+
+# Endpoint: GET /reports/expensesByType/<user_id>
+@app.route('/reports/expensesByType/<int:user_id>', methods=['GET'])
+def expenses_by_type_report(user_id):
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            sql = """
+                SELECT type, SUM(amount) AS total
+                FROM Gastos
+                WHERE user_id = %s
+                GROUP BY type
+            """
+            cursor.execute(sql, (user_id,))
+            report = cursor.fetchall()
+        return jsonify({row['type']: row['total'] for row in report}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
 
 if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
