@@ -31,11 +31,13 @@ const MainLayout = () => {
     };
 
     const stopCamera = () => {
-        if (videoRef.current && videoRef.currentsrcObject) {
+        if (videoRef.current && videoRef.current.srcObject) {
             videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
         }
         setCameraActive(false);
     };
+
 
     const capturePhoto = () => {
         if (videoRef.current && canvasRef.current) {
@@ -43,7 +45,10 @@ const MainLayout = () => {
             context.drawImage(videoRef.current, 0, 0, 320, 240);
             const imageData = canvasRef.current.toDataURL('image/png');
             setCapturedImage(imageData);
-            stopCamera();
+
+            setTimeout(() => {
+                stopCamera();
+            }, 100);
         }
     };
 
@@ -76,14 +81,12 @@ const MainLayout = () => {
                                 <input type="text" placeholder="Teléfono" required />
                                 <input type="password" placeholder="Contraseña" required />
                                 <input type="password" placeholder="Confirmar Contraseña" required />
-
+                                <label>Foto del Usuario (Requerido): </label><br />
                                 {!cameraActive && (
                                     <button type="button" className="camera-button" onClick={startCamera}>
                                         Activar Cámara
                                     </button>
                                 )}
-                                <input type="file" accept="image/*" />
-
                             </>
                         )}
                         {isLogin && (
@@ -102,6 +105,7 @@ const MainLayout = () => {
                             <div className="camera-section">
                                 <video ref={videoRef} autoPlay width="320" height="240" />
                                 <button type="button" onClick={capturePhoto}>Capturar Foto</button>
+                                <button type="button" onClick={stopCamera}>Detener Cámara</button>
                             </div>
                         )}
 
@@ -115,7 +119,7 @@ const MainLayout = () => {
                         <canvas ref={canvasRef} width="320" height="240" style={{ display: 'none' }} />
 
                         <button type="submit" className="login-button">
-                            {isLogin ? 'Login 🔒' : 'Register 📝'}
+                            {isLogin ? 'Login 🔒' : 'Registrar 📝'}
                         </button>
                     </form>
 

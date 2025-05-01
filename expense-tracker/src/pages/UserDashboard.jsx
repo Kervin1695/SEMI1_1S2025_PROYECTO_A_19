@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import CurrentBudget from '../components/CurrentBudget';
 import BillsList from '../components/BillsList';
 import PastExpenses from '../components/PastExpenses';
+import Reports from '../components/Reports';
 import AddBill from '../components/AddBill';
 import '../styles/userDashboard.css';
 
@@ -25,7 +26,7 @@ const UserDashboard = (user) => {
             case 'pastExpenses':
                 return <PastExpenses user={user} />;
             case 'reports':
-                return <div>Reportes</div>;
+                return <Reports user={user} />;
             default:
                 return null;
         }

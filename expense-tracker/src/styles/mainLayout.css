@@ -87,6 +87,18 @@ h1 {
   font-size: 14px;
 }
 
+.camera-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #2a4370;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+
 .login-button {
   width: 100%;
   padding: 10px;
