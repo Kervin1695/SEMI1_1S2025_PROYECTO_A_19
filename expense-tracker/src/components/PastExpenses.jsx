@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchExpenses } from '../services/api';
 import '../styles/pastExpenses.css';
 
-const PastExpenses = () => {
+const PastExpenses = (user) => {
     const [filter, setFilter] = useState('all');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [expenses, setExpenses] = useState([{ "id": 1, "type": "Supermercado", "date": "2025-01-05", "description": "Compra de alimentos", "amount": 350.75 },
+        { "id": 2, "type": "Gasolina", "date": "2025-03-02", "description": "Llenado de tanque", "amount": 285.50 },
+        { "id": 3, "type": "Internet", "date": "2025-04-01", "description": "Pago mensual del servicio", "amount": 200.00 },
+        { "id": 4, "type": "Ropa", "date": "2025-04-10", "description": "Compra de ropa", "amount": 580.90 },
+        { "id": 5, "type": "Educación", "date": "2025-04-15", "description": "Curso online", "amount": 150.00 }
+    ]);
 
-    const expenses = [
-        { id: 1, type: 'Supermercado', date: '2025-01-05', description: 'Compra de alimentos', },
-        { id: 2, type: 'Gasolina', date: '2025-03-02', description: 'Llenado de tanque', },
-        { id: 3, type: 'Internet', date: '2025-04-01', description: 'Pago mensual del servicio', },
-        { id: 4, type: 'Ropa', date: '2025-04-10', description: 'Compra de ropa', },
-        { id: 5, type: 'Educación', date: '2025-04-15', description: 'Curso online', },
-    ];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetchExpenses();
+                setExpenses(response.data);
+            } catch (error) {
+                console.error('Error fetching expenses:', error);
+            }
+        };
+        fetchData();
+    }
+    , []);
 
     // Función para filtrar por fecha
     const filterExpenses = (expenses) => {
@@ -111,6 +123,7 @@ const PastExpenses = () => {
                 <thead>
                     <tr>
                         <th>Tipo de Gasto</th>
+                        <th>Gasto</th>
                         <th>Fecha de Emisión</th>
                         <th>Descripción</th>
                     </tr>
@@ -119,6 +132,7 @@ const PastExpenses = () => {
                     {filteredExpenses.map((expense) => (
                         <tr key={expense.id}>
                             <td>{expense.type}</td>
+                            <td>Q{expense.amount.toFixed(2)}</td>
                             <td>{expense.date}</td>
                             <td>{expense.description}</td>
                         </tr>

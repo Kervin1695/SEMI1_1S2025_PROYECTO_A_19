@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import CurrentBudget from '../components/CurrentBudget';
 import BillsList from '../components/BillsList';
 import PastExpenses from '../components/PastExpenses';
+import AddBill from '../components/AddBill';
 import '../styles/userDashboard.css';
 
-const UserDashboard = () => {
+const UserDashboard = (user) => {
     const [currentTab, setCurrentTab] = useState('budget');
+    const [showAddBill, setShowAddBill] = useState(false);
     const [expenses, setExpenses] = useState([
         { id: 1, description: 'Compra supermercado', amount: 200, date: '2025-04-01' },
         { id: 2, description: 'Gasolina', amount: 50, date: '2025-04-05' },
@@ -17,11 +19,11 @@ const UserDashboard = () => {
     const renderTabContent = () => {
         switch (currentTab) {
             case 'budget':
-                return <CurrentBudget />
+                return <CurrentBudget user={user} />
             case 'invoices':
-                return <BillsList />;
+                return <BillsList user={user} />;
             case 'pastExpenses':
-                return <PastExpenses />;
+                return <PastExpenses user={user} />;
             case 'reports':
                 return <div>Reportes</div>;
             default:
@@ -54,14 +56,14 @@ const UserDashboard = () => {
                 <div className="header">
                     <h2>Dashboard</h2>
                     <div className="actions">
-                        <button className="action-button">Agregar Gasto</button>
-                        <button className="action-button">Agregar Factura</button>
+                        <button className="action-button" onClick={() => setShowAddBill(true)}>Agregar Gasto</button>
                     </div>
                 </div>
                 <div className="content">
                     {renderTabContent()}
                 </div>
             </div>
+            {showAddBill && <AddBill onClose={() => setShowAddBill(false)} />}
         </div>
     );
 };

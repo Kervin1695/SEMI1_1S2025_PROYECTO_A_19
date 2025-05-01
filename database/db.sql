@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS 'Gastos' (
     `description` VARCHAR(255) NOT NULL,
     `amount` DECIMAL(10, 2) NOT NULL,
     `date` DATE NOT NULL,
-    'bill' VARCHAR(255),
+    'bill_url' VARCHAR(255),
     PRIMARY KEY (`id`),
     FOREIGN KEY (`user_id`) REFERENCES `Usuarios`(`id`)
 );
