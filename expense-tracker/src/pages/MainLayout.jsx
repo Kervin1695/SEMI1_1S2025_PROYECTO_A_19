@@ -1,14 +1,79 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/mainLayout.css';
 import UserDashboard from './UserDashboard';
 import bankingImage from '../assets/online-banking.png';
+import { loginUser, registerUser } from '../services/api';
 
 const MainLayout = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [cameraActive, setCameraActive] = useState(false);
     const [capturedImage, setCapturedImage] = useState(null);
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [username, setUsername] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [user, setUser] = useState(null);
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+    const navigate = useNavigate();
+
+    const refreshPage = () => {
+        window.location.reload();
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+
+        const userData = {
+            username: username,
+            password: password,
+            email: email,
+            name: name,
+            lastname: lastName,
+            phone: phone,
+        };
+        console.log('User data:', userData);
+        try {
+            
+            if (isLogin) {
+                const response = await loginUser(userData);
+                const responseData = response;
+                const userData2 = {
+                    user_id: responseData.id_user,
+                }
+                console.log('Response data:', responseData);
+                if (response.message === "Login exitoso") {
+                    console.log(responseData)
+                    alert('Login successful!');
+                    navigate('/dashboard', { state: { user:userData2 } });
+                } else {
+                    alert('Login failed. Please check your credentials.');
+                }
+            } else {
+                if (password !== confirmPassword) {
+                    alert('Las contraseñas no coinciden.');
+                    return;
+                } 
+                const response = await registerUser(userData);
+                if (response.message === "usuario registrado correctamente") {
+                    setUser(response.data);
+                    alert('Registration successful!');
+                    refreshPage();
+                } else {
+                    alert('Registration failed. Please check your details.');
+                }
+            }
+        } catch (error) {
+            console.error('Error during form submission:', error);
+            alert('An error occurred. Please try again later.');
+        }
+    };
+
 
     const toggleForm = () => {
         setIsLogin(!isLogin);
@@ -74,13 +139,13 @@ const MainLayout = () => {
                     <form>
                         {!isLogin && (
                             <>
-                                <input type="text" placeholder="Nombre" required />
-                                <input type="text" placeholder="Apellido" required />
-                                <input type="text" placeholder="Username" required />
-                                <input type="email" placeholder="Email" required />
-                                <input type="text" placeholder="Teléfono" required />
-                                <input type="password" placeholder="Contraseña" required />
-                                <input type="password" placeholder="Confirmar Contraseña" required />
+                                <input type="text" placeholder="Nombre" required onChange={(e) => setName(e.target.value)} />
+                                <input type="text" placeholder="Apellido" required onChange={(e) => setLastName(e.target.value)} />
+                                <input type="text" placeholder="Username" required onChange={(e) => setUsername(e.target.value)} />
+                                <input type="email" placeholder="Email" required onChange={(e) => setEmail(e.target.value)} />
+                                <input type="text" placeholder="Teléfono" required onChange={(e) => setPhone(e.target.value)} />
+                                <input type="password" placeholder="Contraseña" required onChange={(e) => setPassword(e.target.value)} />
+                                <input type="password" placeholder="Confirmar Contraseña" required onChange={(e) => setConfirmPassword(e.target.value)} />
                                 <label>Foto del Usuario (Requerido): </label><br />
                                 {!cameraActive && (
                                     <button type="button" className="camera-button" onClick={startCamera}>
@@ -91,8 +156,8 @@ const MainLayout = () => {
                         )}
                         {isLogin && (
                             <>
-                                <input type="text" placeholder="Username" required />
-                                <input type="password" placeholder="Password" required />
+                                <input type="text" placeholder="Username" required onChange={(e) => setUsername(e.target.value)} />
+                                <input type="password" placeholder="Contraseña" required onChange={(e) => setPassword(e.target.value)} />
                                 {!cameraActive && (
                                     <button type="button" className="camera-button" onClick={startCamera}>
                                         Activar Cámara
@@ -118,9 +183,10 @@ const MainLayout = () => {
 
                         <canvas ref={canvasRef} width="320" height="240" style={{ display: 'none' }} />
 
-                        <button type="submit" className="login-button">
+                        <button type="submit" className="login-button" onClick={handleSubmit}>
                             {isLogin ? 'Login 🔒' : 'Registrar 📝'}
                         </button>
+
                     </form>
 
                     <p className="toggle-text">

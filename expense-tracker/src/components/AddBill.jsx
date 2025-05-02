@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { addBill, addExpense } from '../services/api';
 import '../styles/addBill.css';
 
-const AddBill = ({ onClose }) => {
+const AddBill = ({ onClose, user }) => {
     const [hasInvoice, setHasInvoice] = useState(false);
     const [formData, setFormData] = useState({
         type: '',
         description: '',
         date: '',
         amount: '',
-        invoiceFile: null
+        invoiceFile: ''
     });
 
     const handleChange = (e) => {
@@ -45,7 +45,7 @@ const AddBill = ({ onClose }) => {
                 amount: formData.amount
             };
 
-            addExpense(dataWithoutInvoice)
+            addExpense(user.user_id, dataWithoutInvoice)
                 .then(response => {
                     console.log('Gasto agregado sin factura:', response.data);
                 })
@@ -72,7 +72,7 @@ const AddBill = ({ onClose }) => {
 
                     <label>Tipo de Gasto:
                         <select name="type" value={formData.type} onChange={handleChange} required>
-                            <option value="">Seleccione</option>
+                            <option value="" disabled>Seleccione</option>
                             <option value="Alimentación">Alimentación</option>
                             <option value="Transporte">Transporte</option>
                             <option value="Servicios">Servicios</option>

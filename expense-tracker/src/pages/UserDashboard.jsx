@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import CurrentBudget from '../components/CurrentBudget';
 import BillsList from '../components/BillsList';
 import PastExpenses from '../components/PastExpenses';
@@ -6,7 +7,12 @@ import Reports from '../components/Reports';
 import AddBill from '../components/AddBill';
 import '../styles/userDashboard.css';
 
-const UserDashboard = (user) => {
+const UserDashboard = () => {
+    const location = useLocation();
+    const { user } = location.state || {};
+
+    console.log(user); 
+
     const [currentTab, setCurrentTab] = useState('budget');
     const [showAddBill, setShowAddBill] = useState(false);
     const [expenses, setExpenses] = useState([
@@ -47,7 +53,7 @@ const UserDashboard = (user) => {
                     <a href="#">Acerca de Nosotros</a>
                     <a href="#">El Equipo</a>
                     <a href="#">Manuales</a>
-                    <label for="languages"> | Elige un idioma:</label>
+                    <label htmlFor="languages"> | Elige un idioma:</label>
                     <select id="languages" className='select-language' name="opcion_seleccionada">
                         <option value="language1">Español</option>
                         <option value="language2">Inglés</option>
@@ -64,7 +70,7 @@ const UserDashboard = (user) => {
                     {renderTabContent()}
                 </div>
             </div>
-            {showAddBill && <AddBill onClose={() => setShowAddBill(false)} />}
+            {showAddBill && <AddBill onClose={() => setShowAddBill(false)} user={user} />}
         </div>
     );
 };

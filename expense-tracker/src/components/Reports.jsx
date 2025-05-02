@@ -5,7 +5,8 @@ import facturasImg from '../assets/reporte-facturas.png';
 import presupuestoImg from '../assets/reporte-presupuesto.png';
 import { fetchExpensesReport, fetchExpensesByTypeReport } from '../services/api';
 
-const Reports = () => {
+const Reports = ({user}) => {
+    const userId = user?.user_id;
     const [selectedReport, setSelectedReport] = useState('gastosAnuales');
     const [reportData, setReportData] = useState(null);
 
@@ -80,7 +81,7 @@ const Reports = () => {
                             {reportData.map((item, index) => (
                                 <tr key={index}>
                                     <td>{item.tipo}</td>
-                                    <td>${item.monto}</td>
+                                    <td>Q{item.monto}</td>
                                 </tr>
                             ))}
                         </tbody>

@@ -1,32 +1,48 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pymysql
 
 # Configuración de la base de datos
 def get_connection():
     return pymysql.connect(
         host='localhost',
-        user='tu_usuario',  # Cambia esto por tu usuario de la base de datos
-        password='tu_contraseña',  # Cambia esto por tu contraseña
+        user='root',  # Cambia esto por tu usuario de la base de datos
+        password='123456',  # Cambia esto por tu contraseña
         database='DB_Proyecto_1',
         cursorclass=pymysql.cursors.DictCursor
     )
 
 app = Flask(__name__)
+CORS(app)
+
+@app.route('/testConnection', methods=['GET'])
+def test_connection():
+    try:
+        connection = get_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT VERSION()")
+            version = cursor.fetchone()
+        return jsonify({"version": version}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        connection.close()
 
 # Endpoint: POST /register
 @app.route('/register', methods=['POST'])
 def register_user():
     data = request.json
+    print(data)
     try:
         connection = get_connection()
         with connection.cursor() as cursor:
             sql = """
-                INSERT INTO Usuarios (name, lastname, username, email, phone, password, photo)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO Usuarios (name, lastname, username, email, phone, password)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """
             cursor.execute(sql, (
                 data['name'], data['lastname'], data['username'],
-                data['email'], data['phone'], data['password'], data['photo']
+                data['email'], data['phone'], data['password']
             ))
             connection.commit()
         return jsonify({"message": "usuario registrado correctamente"}), 201
@@ -82,17 +98,19 @@ def bills_list(user_id):
         connection = get_connection()
         with connection.cursor() as cursor:
             sql = """
-                SELECT type, date, description, amount, bill AS url
+                SELECT type, date, description, amount, bill_url AS url
                 FROM Gastos
-                WHERE user_id = %s
+                WHERE user_id = %s AND bill_url IS NOT NULL
             """
             cursor.execute(sql, (user_id,))
             bills = cursor.fetchall()
+            print(bills)
         return jsonify(bills), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         connection.close()
+
 
 # Endpoint: GET /pastExpenses/<user_id>
 @app.route('/pastExpenses/<int:user_id>', methods=['GET'])
